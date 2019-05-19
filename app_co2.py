@@ -1,4 +1,4 @@
-from bottle import route, run, template, redirect, request
+from bottle import route, run, template, redirect, request ,default_app
 import linecache
 import json
 from bottle import get, static_file
@@ -19,11 +19,13 @@ def get_co2_data(file_name,get_line_num):
     
     for x in range(num_lines - tail_line + 1, num_lines)[::-1]:
       target_line = linecache.getline(file_name, x)
-      d = target_line.split(",")
-      labels.append(d[0][-8:])
-      data.append(d[1])
-      #print(target_line)
-      linecache.clearcache()
+      #print("len:" + str(len(target_line)))
+      if len(target_line) >1:
+         d = target_line.split(",")
+         labels.append(d[0][-8:])
+         data.append(d[1])
+         #print(target_line)
+         linecache.clearcache()
     
     return labels,data
 
@@ -79,6 +81,11 @@ def img(filepath):
 def js(filepath):
     return static_file(filepath, root="static/js")
 
+@get("/<filepath:re:.*\.js*\.map>")
+def js(filepath):
+    return static_file(filepath, root="static/js")
+
+
 # Dynamic Page ------------------------------------------------------
 @route("/")
 def index():
@@ -92,4 +99,8 @@ def index():
    return template("index", chart_url_60m=chart_url_60m,chart_url_6h=chart_url_6h,latest_time=latest_time,latest_data=latest_data)
 
 # Entry Point
-run(host='raspberrypico2.local', port=8080, debug=True)
+if __name__ == '__main__':
+   #run(host='localhost', port=8080)
+   run(host='192.168.43.199', port=8080, debug=True)
+else:
+   application = default_app()
